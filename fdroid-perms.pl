@@ -6,8 +6,10 @@ use warnings;
 use utf8;
 use open ':encoding(utf8)';
 
-
 use XML::LibXML;
+
+
+my $type = "HTML";
 
 # Normal + Signature
 my @granted = qw(ACCESS_LOCATION_EXTRA_COMMANDS ACCESS_NETWORK_STATE ACCESS_NOTIFICATION_POLICY ACCESS_WIFI_STATE BLUETOOTH BLUETOOTH_ADMIN BROADCAST_STICKY CHANGE_NETWORK_STATE CHANGE_WIFI_MULTICAST_STATE CHANGE_WIFI_STATE DISABLE_KEYGUARD EXPAND_STATUS_BAR GET_PACKAGE_SIZE INSTALL_SHORTCUT INTERNET KILL_BACKGROUND_PROCESSES MANAGE_OWN_CALLS MODIFY_AUDIO_SETTINGS NFC READ_SYNC_SETTINGS READ_SYNC_STATS RECEIVE_BOOT_COMPLETED REORDER_TASKS REQUEST_COMPANION_RUN_IN_BACKGROUND REQUEST_COMPANION_USE_DATA_IN_BACKGROUND REQUEST_DELETE_PACKAGES REQUEST_IGNORE_BATTERY_OPTIMIZATIONS SET_ALARM SET_WALLPAPER SET_WALLPAPER_HINTS TRANSMIT_IR USE_FINGERPRINT VIBRATE WAKE_LOCK WRITE_SYNC_SETTINGS 
@@ -113,29 +115,31 @@ foreach my $app ($dom->findnodes('/fdroid/application')) {
 print "Total apps: $total\n\n";
 
 print "All perms\n";
-print "perm, count, percentage of apps\n";
+printHead("perm", "count", "percentage of apps");
 for my $perm (sort keys %permcounts) {
     my $count = $permcounts{$perm};
-    print "$perm\t$count\t" . sprintf("%2.2f", $count/$total*100) . "%\n";
+    printLine($perm,$count, sprintf("%2.2f", $count/$total*100) . "%");
 }
-print "\n";
+printFoot();
+
 
 
 print "Normal warry perms\n";
-print "perm, count, percentage of apps\n";
+printHead("perm", "count", "percentage of apps");
 for my $perm (sort @mywarry) {
     my $count = $permcounts{$perm} || 0;
-    print "$perm\t$count\t" . sprintf("%2.2f", $count/$total*100) . "%\n";
+    printLine($perm,$count, sprintf("%2.2f", $count/$total*100) . "%");
 }
-print "\n";
+printFoot();
+
 
 print "Ask perms\n";
-print "perm, count, percentage of apps\n";
+printHead("perm", "count", "percentage of apps");
 for my $perm (sort @notgranted) {
     my $count = $permcounts{$perm} || 0;
-    print "$perm\t$count\t" . sprintf("%2.2f", $count/$total*100) . "%\n";
+    printLine($perm,$count, sprintf("%2.2f", $count/$total*100) . "%");
 }
-print "\n";
+printFoot();
 
 
 
@@ -148,7 +152,7 @@ my $fullwarrytot = 0;
 my $awarrytot = 0;
 my $afullwarrytot = 0;
 
-print "package, mywarry, fullwarry, norm, ask, other, total(norm + ask + other)\n";
+printHead("package", "mywarry", "fullwarry", "norm", "ask", "other", "total(norm + ask + other)");
 
 
 for my $package (sort @packages) {
@@ -168,21 +172,61 @@ for my $package (sort @packages) {
     $awarrytot++ if $mywarry==0;
     $afullwarrytot++ if $fullwarry==0;
     
-    print "$package, $mywarry, $fullwarry, $norm, $ask, $other, ". ($norm + $ask + $other);
-    print "\n";    
+    printLine($package, $mywarry, $fullwarry, $norm, $ask, $other, "($norm + $ask + $other)");
+}
+printFoot();
+
+print "\n";
+printHead(1,2);
+printLine( "Normal  perms per-app average: " , sprintf("%2.2f", $normtot/$total) );
+printLine( "Ask     perms per-app average: " , sprintf("%2.2f", $asktot/$total) );
+
+printLine( "Total   perms per-app average: " , sprintf("%2.2f", ($normtot+$asktot)/$total) );
+
+print "\n";    
+
+
+printLine( "Warry   perms per-app average: " , sprintf("%2.2f", $warrytot/$total) );
+printLine( "Warry2  perms per-app average: " , sprintf("%2.2f", $fullwarrytot/$total) );
+
+printLine( "aWarry  apps percentage: " , sprintf("%2.2f", $awarrytot/$total * 100) );
+printLine( "aWarry2 apps percentage: " , sprintf("%2.2f", $afullwarrytot/$total * 100) );
+printFoot();
+
+
+
+sub printHead {
+    
+    if ($type eq "HTML") {
+        print "<table>";
+        print "<tr><th>";
+        print join('</th><th>', map {my $i=$_; $i=~s/</&lt;/g; $i=~s/>/&gt;/g; $i=~s/&/&amp;/g; $i } @_);
+        print "</th></tr>\n";
+    }  else { 
+        printLine();
+    }
 }
 
-print "\n";    
-print "Normal  perms per-app average: " . sprintf("%2.2f", $normtot/$total) . "\n";
-print "Ask     perms per-app average: " . sprintf("%2.2f", $asktot/$total) . "\n";
+sub printLine {
+    
+    if ($type eq "HTML") {
+        print "<tr><td>";
+        print join('</td><td>', map {my $i=$_; $i=~s/</&lt;/g; $i=~s/>/&gt;/g; $i=~s/&/&amp;/g; $i } @_);
+        print "</td></tr>\n";
+    } else {
+        print join(',', map {my $i=$_; $i=~s/"/""/g; $i=~s/\r|\n/ /g; qq{"$i"} } @_);
+        print "\n";
+    }
 
-print "Total   perms per-app average: " . sprintf("%2.2f", ($normtot+$asktot)/$total) . "\n";
-print "\n";    
+    
+}
 
-
-print "Warry   perms per-app average: " . sprintf("%2.2f", $warrytot/$total) . "\n";
-print "Warry2  perms per-app average: " . sprintf("%2.2f", $fullwarrytot/$total) . "\n";
-
-print "aWarry  apps percentage: " . sprintf("%2.2f", $awarrytot/$total * 100). "\n";
-print "aWarry2 apps percentage: " . sprintf("%2.2f", $afullwarrytot/$total * 100) . "\n";
-
+sub printFoot {
+    
+    if ($type eq "HTML") {
+        print "</td></tr>\n";
+        print "</table>\n";
+    } else {
+        print "\n";
+    }
+}

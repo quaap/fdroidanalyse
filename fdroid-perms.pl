@@ -9,7 +9,9 @@ use open ':encoding(utf8)';
 use XML::LibXML;
 
 
-my $type = "HTML";
+#my $type = "HTML";
+#my $type = "CSV";
+my $type = "creole";
 
 # Normal + Signature
 my @granted = qw(ACCESS_LOCATION_EXTRA_COMMANDS ACCESS_NETWORK_STATE ACCESS_NOTIFICATION_POLICY ACCESS_WIFI_STATE BLUETOOTH BLUETOOTH_ADMIN BROADCAST_STICKY CHANGE_NETWORK_STATE CHANGE_WIFI_MULTICAST_STATE CHANGE_WIFI_STATE DISABLE_KEYGUARD EXPAND_STATUS_BAR GET_PACKAGE_SIZE INSTALL_SHORTCUT INTERNET KILL_BACKGROUND_PROCESSES MANAGE_OWN_CALLS MODIFY_AUDIO_SETTINGS NFC READ_SYNC_SETTINGS READ_SYNC_STATS RECEIVE_BOOT_COMPLETED REORDER_TASKS REQUEST_COMPANION_RUN_IN_BACKGROUND REQUEST_COMPANION_USE_DATA_IN_BACKGROUND REQUEST_DELETE_PACKAGES REQUEST_IGNORE_BATTERY_OPTIMIZATIONS SET_ALARM SET_WALLPAPER SET_WALLPAPER_HINTS TRANSMIT_IR USE_FINGERPRINT VIBRATE WAKE_LOCK WRITE_SYNC_SETTINGS 
@@ -202,6 +204,11 @@ sub printHead {
         print "<tr><th>";
         print join('</th><th>', map {my $i=$_; $i=~s/</&lt;/g; $i=~s/>/&gt;/g; $i=~s/&/&amp;/g; $i } @_);
         print "</th></tr>\n";
+    } elsif ($type eq "creole") {
+        print "|=";
+        print join('|=', map {my $i=$_; $i=~s/\||\r|\n/ /g; $i } @_);
+        print "|\n";
+
     }  else { 
         printLine();
     }
@@ -213,6 +220,10 @@ sub printLine {
         print "<tr><td>";
         print join('</td><td>', map {my $i=$_; $i=~s/</&lt;/g; $i=~s/>/&gt;/g; $i=~s/&/&amp;/g; $i } @_);
         print "</td></tr>\n";
+    } elsif ($type eq "creole") {
+        print "|";
+        print join('|', map {my $i=$_; $i=~s/\||\r|\n/ /g; $i } @_);
+        print "|\n";
     } else {
         print join(',', map {my $i=$_; $i=~s/"/""/g; $i=~s/\r|\n/ /g; qq{"$i"} } @_);
         print "\n";

@@ -60,9 +60,11 @@ my %permcounts;
 my %normalpermsperapp;
 my %askpermsperapp;
 my %otherpermsperapp;
+
 my %warrypermsperapp;
 my %fullwarrypermsperapp;
 
+my %packageperm;
 
 my @packages;
 
@@ -75,12 +77,17 @@ foreach my $app ($dom->findnodes('/fdroid/application')) {
 
     push @packages, $package;
     
+
     #print "$name, $package:\n";
     for my $perm (split /,\s*/, $permissions) {
+        
         if ($perm =~ /^[A-Z_]+$/ or $perm =~ /^com\.android\./) {
             
             $permcounts{$perm}=0 if !exists $permcounts{$perm};
             $permcounts{$perm}++;
+            
+            #$packageperm{$package} = [] if !exists $packageperm{$package};
+            #push @$packageperm{$package}, $perm;
             
             if (grep /^$perm$/, @mywarry) {
                 $warrypermsperapp{$package}=0 if !exists $warrypermsperapp{$package};
@@ -119,7 +126,7 @@ print "Total apps: $total\n\n";
 print "All perms\n";
 printHead("perm", "count", "percentage of apps");
 for my $perm (sort keys %permcounts) {
-    my $count = $permcounts{$perm};
+    my $count = $permcounts{$perm} || 0;
     printLine($perm,$count, sprintf("%2.2f", $count/$total*100) . "%");
 }
 printFoot();
@@ -174,7 +181,7 @@ for my $package (sort @packages) {
     $awarrytot++ if $mywarry==0;
     $afullwarrytot++ if $fullwarry==0;
     
-    printLine($package, $mywarry, $fullwarry, $norm, $ask, $other, "($norm + $ask + $other)");
+    printLine($package, $mywarry, $fullwarry, $norm, $ask, $other, ($norm + $ask + $other));
 }
 printFoot();
 
@@ -190,6 +197,9 @@ print "\n";
 
 printLine( "Warry   perms per-app average: " , sprintf("%2.2f", $warrytot/$total) );
 printLine( "Warry2  perms per-app average: " , sprintf("%2.2f", $fullwarrytot/$total) );
+
+printLine( "Warry  apps percentage: " , sprintf("%2.2f", (keys %warrypermsperapp)/$total * 100) );
+printLine( "Warry2 apps percentage: " , sprintf("%2.2f", (keys %fullwarrypermsperapp)/$total * 100) );
 
 printLine( "aWarry  apps percentage: " , sprintf("%2.2f", $awarrytot/$total * 100) );
 printLine( "aWarry2 apps percentage: " , sprintf("%2.2f", $afullwarrytot/$total * 100) );
@@ -222,7 +232,7 @@ sub printLine {
         print "</td></tr>\n";
     } elsif ($type eq "creole") {
         print "|";
-        print join('|', map {my $i=$_; $i=~s/\||\r|\n/ /g; $i } @_);
+        print join('|', map {my $i=$_; $i=~s/\||\r|\n/ /g; $i=~s/^(\d)/ $1/g; $i } @_);
         print "|\n";
     } else {
         print join(',', map {my $i=$_; $i=~s/"/""/g; $i=~s/\r|\n/ /g; qq{"$i"} } @_);

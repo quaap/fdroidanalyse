@@ -40,7 +40,7 @@ my @other = qw( ACCESS_COARSE_UPDATES ACCESS_LOCATION ACCESS_MOCK_LOCATION ACCES
  WRITE_PROFILE WRITE_SECURE_SETTINGS WRITE_SMS WRITE_USER_DICTIONARY);
 
 # normal permissions to be warry of
-my @mywarry = qw(INTERNET BLUETOOTH BLUETOOTH_ADMIN ACCESS_NETWORK_STATE ACCESS_WIFI_STATE CHANGE_NETWORK_STATE CHANGE_WIFI_MULTICAST_STATE CHANGE_WIFI_STATE NFC KILL_BACKGROUND_PROCESSES SET_WALLPAPER TRANSMIT_IR REORDER_TASKS MODIFY_AUDIO_SETTINGS RECEIVE_BOOT_COMPLETED CHANGE_CONFIGURATION USE_CREDENTIALS MANAGE_ACCOUNTS NETWORK WRITE_SYNC_SETTINGS com.android.browser.permission.READ_HISTORY_BOOKMARKS com.android.browser.permission.WRITE_HISTORY_BOOKMARKS );
+my @mywarry = qw(INTERNET BLUETOOTH BLUETOOTH_ADMIN ACCESS_NETWORK_STATE ACCESS_WIFI_STATE CHANGE_NETWORK_STATE CHANGE_WIFI_MULTICAST_STATE CHANGE_WIFI_STATE NFC KILL_BACKGROUND_PROCESSES SET_WALLPAPER TRANSMIT_IR REORDER_TASKS CHANGE_CONFIGURATION USE_CREDENTIALS  NETWORK WRITE_SYNC_SETTINGS  );
 
 my @fullwarry;
 
@@ -64,8 +64,6 @@ my %otherpermsperapp;
 my %warrypermsperapp;
 my %fullwarrypermsperapp;
 
-my %packageperm;
-
 my @packages;
 
 foreach my $app ($dom->findnodes('/fdroid/application')) {
@@ -85,9 +83,6 @@ foreach my $app ($dom->findnodes('/fdroid/application')) {
             
             $permcounts{$perm}=0 if !exists $permcounts{$perm};
             $permcounts{$perm}++;
-            
-            #$packageperm{$package} = [] if !exists $packageperm{$package};
-            #push @$packageperm{$package}, $perm;
             
             if (grep /^$perm$/, @mywarry) {
                 $warrypermsperapp{$package}=0 if !exists $warrypermsperapp{$package};
@@ -158,9 +153,6 @@ my $asktot = 0;
 my $warrytot = 0;
 my $fullwarrytot = 0;
 
-my $awarrytot = 0;
-my $afullwarrytot = 0;
-
 printHead("package", "mywarry", "fullwarry", "norm", "ask", "other", "total(norm + ask + other)");
 
 
@@ -177,10 +169,7 @@ for my $package (sort @packages) {
 
     $warrytot += $mywarry;
     $fullwarrytot += $fullwarry;
-    
-    $awarrytot++ if $mywarry==0;
-    $afullwarrytot++ if $fullwarry==0;
-    
+        
     printLine($package, $mywarry, $fullwarry, $norm, $ask, $other, ($norm + $ask + $other));
 }
 printFoot();
@@ -195,14 +184,13 @@ printLine( "Total   perms per-app average: " , sprintf("%2.2f", ($normtot+$askto
 print "\n";    
 
 
-printLine( "Warry   perms per-app average: " , sprintf("%2.2f", $warrytot/$total) );
-printLine( "Warry2  perms per-app average: " , sprintf("%2.2f", $fullwarrytot/$total) );
+printLine( "Warry      perms per-app average: " , sprintf("%2.2f", $warrytot/$total) );
+printLine( "Warry+Ask  perms per-app average: " , sprintf("%2.2f", $fullwarrytot/$total) );
 
-printLine( "Warry  apps percentage: " , sprintf("%2.2f", (keys %warrypermsperapp)/$total * 100) );
-printLine( "Warry2 apps percentage: " , sprintf("%2.2f", (keys %fullwarrypermsperapp)/$total * 100) );
+printLine( "Warry      apps percentage: " , sprintf("%2.2f", (keys %warrypermsperapp)/$total * 100) );
+printLine( "Warry+Ask  apps percentage: " , sprintf("%2.2f", (keys %fullwarrypermsperapp)/$total * 100) );
 
-printLine( "aWarry  apps percentage: " , sprintf("%2.2f", $awarrytot/$total * 100) );
-printLine( "aWarry2 apps percentage: " , sprintf("%2.2f", $afullwarrytot/$total * 100) );
+
 printFoot();
 
 
